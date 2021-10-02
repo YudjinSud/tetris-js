@@ -1,13 +1,29 @@
-import {Figure, shapes, CELL_SIZE, MOVE_STEP} from "./figure.js";
+import {Figure, shapes, CELL_SIZE} from "./figure.js";
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+
+const nextFigureCanvas = document.getElementById("next-figure-canvas");
+const ctxNextFigure = nextFigureCanvas.getContext("2d");
+
+
+document.addEventListener("nextFigureChanged", event => {
+    ctxNextFigure.clearRect(0, 0, nextFigureCanvas.clientWidth, nextFigureCanvas.clientHeight);
+    event.detail.nextFigure.cells.forEach( (cell) => {
+        ctxNextFigure.fillStyle = cell.color;
+        ctxNextFigure.fillRect((cell.position.x  - DEFAULT_POSITION.x + 1) * CELL_SIZE,
+            (cell.position.y - DEFAULT_POSITION.y) * CELL_SIZE,
+            CELL_SIZE, CELL_SIZE);
+    })
+    ctxNextFigure.fill();
+})
+
 var intervalTickID = 0;
 
 const FIELD_WIDTH =  Math.floor(canvas.clientWidth / 10);
 const FIELD_HEIGHT = Math.floor(canvas.clientHeight / 10);
 
-const TICK_INTERVAL = 70;
+const TICK_INTERVAL = 100;
 const DEFAULT_POSITION = {x: Math.floor(FIELD_WIDTH / 2), y: -1};
 const FAST_SPEED = 3;
 
@@ -73,7 +89,7 @@ function checkCollisionWithFigures(figure, field, speed = 1) {
         if(cell.position.y + 1 >= FIELD_HEIGHT) return;
         if (field[cell.position.y + speed][cell.position.x].empty === false) {
             if(cell.position.y <= 0) {
-                alert("You lose");
+                // alert("You lose");
                 clearInterval(intervalTickID);
             }
             res = true;
@@ -102,16 +118,40 @@ function handleUserInput(event) {
     }
 }
 
+
+function cached(func) {
+    let nextFigure = new Figure(DEFAULT_POSITION.x, DEFAULT_POSITION.y);
+    let currentFigure;
+    return function() {
+        currentFigure = nextFigure;
+        nextFigure = func();
+        let nextFigureChanged = new CustomEvent("nextFigureChanged",  {
+            detail: { nextFigure: nextFigure},
+        });
+        document.dispatchEvent(nextFigureChanged);
+        return currentFigure
+    };
+}
+
 function generateNewFigure() {
     const figure = new Figure(DEFAULT_POSITION.x, DEFAULT_POSITION.y);
     return figure;
+}
+
+function drawFigure(ctx, figure) {
+    figure.cells.forEach( (cell) => {
+        ctx.fillStyle = cell.color;
+        ctx.fillRect(cell.position.x * CELL_SIZE,
+            cell.position.y * CELL_SIZE,
+            CELL_SIZE, CELL_SIZE);
+    })
 }
 
 function render(ctx, field, figures) {
     let activeFigure = figures[figures.length - 1];
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     for (let i = 0; i < FIELD_HEIGHT; i++) {
-        for (let j = 0; j < FIELD_WIDTH; j++) {
+        for (let j = 0; j <= FIELD_WIDTH; j++) {
             let cell = field[i][j];
             if (cell.empty) continue;
             ctx.fillStyle = cell.color;
@@ -121,12 +161,7 @@ function render(ctx, field, figures) {
         }
     }
 
-    activeFigure.cells.forEach( (cell) => {
-        ctx.fillStyle = cell.color;
-        ctx.fillRect(cell.position.x * CELL_SIZE,
-            cell.position.y * CELL_SIZE,
-            CELL_SIZE, CELL_SIZE);
-    })
+    drawFigure(ctx, activeFigure);
 
     ctx.fill();
 }
@@ -140,11 +175,12 @@ function updateField(field, figure) {
 
 function compressField(field) {
     for (let i = FIELD_HEIGHT - 1; i > 1; i--) {
-        for (let j = 0; j < FIELD_WIDTH; j++) {
+        for (let j = 0; j <= FIELD_WIDTH; j++) {
             if (field[i][j].empty && !field[i-1][j].empty) {
                 field[i][j].empty = false;
                 field[i][j].color = field[i-1][j].color;
                 field[i-1][j].empty = true;
+                field[i-1][j].color = "";
             }
         }
     }
@@ -170,10 +206,21 @@ function checkField(field) {
     }
 }
 
+function checkCollisionWithEntities(activeFigure, field, speed = 1) {
+    return  (checkCollisionWithWall(activeFigure) ||
+        checkCollisionWithFigures(activeFigure, field, speed) ||
+        checkCollisionWithFloor(activeFigure, speed));
+}
+
 function tick(field, figures) {
     let activeFigure = figures[figures.length - 1];
     if (globalState._shouldRotate) {
-        activeFigure.rotate();
+        activeFigure.rotate(FIELD_WIDTH);
+        if(checkCollisionWithEntities(activeFigure, field)) {
+            activeFigure.rotate(FIELD_WIDTH);
+            activeFigure.rotate(FIELD_WIDTH);
+            activeFigure.rotate(FIELD_WIDTH);
+        }
     }
 
     if (globalState._shouldSpeedUp) {
@@ -185,7 +232,7 @@ function tick(field, figures) {
 
     if (globalState._changed && globalState._dx) {
         activeFigure.move(globalState._dx);
-        if ((checkCollisionWithWall(activeFigure))) {
+        if (checkCollisionWithEntities(activeFigure, field)) {
             activeFigure.move(-globalState._dx);
         }
     }
@@ -199,14 +246,15 @@ function tick(field, figures) {
     globalState.changed = false;
 }
 
-
-function main() {
+function game() {
     const field = [];
     const figures = [];
 
+    generateNewFigure = cached(generateNewFigure);
+
     for (let i = 0; i < FIELD_HEIGHT; i++) {
         field[i] = []
-        for (let j = 0; j < FIELD_WIDTH; j++) {
+        for (let j = 0; j <= FIELD_WIDTH; j++) {
             field[i][j] = {color: "", empty: true}
         }
     }
@@ -218,4 +266,4 @@ function main() {
     setInterval(render, TICK_INTERVAL, ctx, field, figures);
 }
 
-main();
+game();

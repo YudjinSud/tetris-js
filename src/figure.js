@@ -1,5 +1,3 @@
-export const MOVE_STEP = 5;
-
 export const CELL_SIZE = 10;
 
 export const shapes = [
@@ -39,6 +37,7 @@ export class Figure {
 
         const shapeNumber = getRandomInt();
         this.cells = []
+        this.shape = shapes[shapeNumber];
 
         let cnt = 0;
         const color = randomColor(1);
@@ -62,15 +61,22 @@ export class Figure {
         return this;
     }
 
-    rotate() {
+    rotate(fieldWidth = 1e3) {
         const center = { ...this.cells[0] };
-        this.cells.forEach( (cell) => {
-                let x = cell.position.y - center.position.y;
-                let y = cell.position.x - center.position.x;
-                cell.position.x = center.position.x - x;
-                cell.position.y = center.position.y + y;
+        let tmpCells = this.cells.map(e => JSON.parse(JSON.stringify(e)));
+        for (const cell of tmpCells) {
+            let x = cell.position.y - center.position.y;
+            let y = cell.position.x - center.position.x;
+            let newX = center.position.x - x;
+            let newY = center.position.y + y;
+            if (newX >= fieldWidth || newX < 0 || newY <= 0) {
+                console.log(newX);
+                return;
             }
-        )
+            cell.position.x = newX;
+            cell.position.y = newY;
+        }
+        this.cells = tmpCells;
         return this;
     }
 }
