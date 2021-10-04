@@ -6,6 +6,8 @@ const ctx = canvas.getContext("2d");
 const nextFigureCanvas = document.getElementById("next-figure-canvas");
 const ctxNextFigure = nextFigureCanvas.getContext("2d");
 
+const currentUser = getCookie(CURRENT_LOGGED_PLAYER);
+
 
 document.addEventListener("nextFigureChanged", event => {
     ctxNextFigure.clearRect(0, 0, nextFigureCanvas.clientWidth, nextFigureCanvas.clientHeight);
@@ -173,6 +175,10 @@ function updateField(field, figure) {
     checkField(field);
 }
 
+function addPointToCurrentUser(points = 100) {
+
+}
+
 function compressField(field) {
     for (let i = FIELD_HEIGHT - 1; i > 1; i--) {
         for (let j = 0; j <= FIELD_WIDTH; j++) {
@@ -223,20 +229,22 @@ function tick(field, figures) {
         }
     }
 
-    if (globalState._shouldSpeedUp) {
+    if (!globalState._shouldRotate && globalState._shouldSpeedUp) {
         if (!checkCollisionWithFloor(activeFigure, FAST_SPEED) &&
             !checkCollisionWithFigures(activeFigure, field, FAST_SPEED)) {
             globalState._dy = FAST_SPEED;
         }
     }
 
-    if (globalState._changed && globalState._dx) {
+    if (!globalState._shouldRotate && globalState._changed && globalState._dx) {
         activeFigure.move(globalState._dx);
         if (checkCollisionWithEntities(activeFigure, field)) {
             activeFigure.move(-globalState._dx);
         }
     }
-    activeFigure.move(0, globalState._dy);
+    if (!globalState._shouldRotate) {
+        activeFigure.move(0, globalState._dy);
+    }
 
     if (checkCollisionWithFloor(activeFigure) || checkCollisionWithFigures(activeFigure, field)) {
         updateField(field, activeFigure);

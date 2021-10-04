@@ -2,11 +2,11 @@
     border: 1px solid black;
     /*width: 150px;*/
     /*height: 300px;*/
-    /*margin-left: 200px;*/
+    margin-left: 200px;
 }
 
 .column {
-    /*margin-left: 40px !important;*/
+    margin-left: 10px !important;
     width: 150px;
 }
 

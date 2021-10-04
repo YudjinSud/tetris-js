@@ -8,10 +8,12 @@
 </head>
 <body>
 
+<a href="authForm.html">Authorization form</a><br>
 
+<a href="records.html">Records</a>
 <div class="app">
     <div class="info column">
-        <h4>Player:</h4>
+        <h4 id="name">Player: </h4>
         <p>Next figure:</p>
         <div id="next-figure">
             <canvas id="next-figure-canvas" width="40" height="40"></canvas>
@@ -30,6 +32,37 @@
 </div>
 
 <script type="module" src="src/game.js"></script>
+
+<script>
+
+    const CURRENT_LOGGED_PLAYER = "currentLoggedPlayer";
+
+    window.onload = (evt) => {
+        const name = document.getElementById("name");
+
+        let lastLogged = getCookie(CURRENT_LOGGED_PLAYER);
+        if (lastLogged) {
+            name.innerText += lastLogged;
+            return;
+        }
+        else if(getLastNameIndex()) {
+            name.innerText += getCookie(`player${getLastNameIndex()}`);
+        }
+    };
+
+    function getLastNameIndex() {
+        const cookies = document.cookie.split(";");
+        return cookies.length-1;
+    }
+
+
+    function getCookie(name) {
+        let matches = document.cookie.match(new RegExp(
+            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+        ));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+</script>
 
 </body>
 </html>
