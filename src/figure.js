@@ -70,7 +70,6 @@ export class Figure {
             let newX = center.position.x - x;
             let newY = center.position.y + y;
             if (newX >= fieldWidth || newX < 0 || newY <= 0) {
-                console.log(newX);
                 return;
             }
             cell.position.x = newX;

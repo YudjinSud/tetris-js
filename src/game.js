@@ -1,4 +1,5 @@
 import {Figure, shapes, CELL_SIZE} from "./figure.js";
+import {CURRENT_LOGGED_PLAYER, setCurrentPlayerIntoDOM, getCookie, setCookie} from "./utils.js";
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -8,6 +9,11 @@ const ctxNextFigure = nextFigureCanvas.getContext("2d");
 
 const currentUser = getCookie(CURRENT_LOGGED_PLAYER);
 
+window.onload = (evt) => {
+    const name = document.getElementById("name");
+    console.log(name);
+    setCurrentPlayerIntoDOM(name, "innerText");
+};
 
 document.addEventListener("nextFigureChanged", event => {
     ctxNextFigure.clearRect(0, 0, nextFigureCanvas.clientWidth, nextFigureCanvas.clientHeight);
@@ -21,6 +27,10 @@ document.addEventListener("nextFigureChanged", event => {
 })
 
 var intervalTickID = 0;
+var paused = 0;
+
+const field = [];
+const figures = [];
 
 const FIELD_WIDTH =  Math.floor(canvas.clientWidth / 10);
 const FIELD_HEIGHT = Math.floor(canvas.clientHeight / 10);
@@ -28,6 +38,8 @@ const FIELD_HEIGHT = Math.floor(canvas.clientHeight / 10);
 const TICK_INTERVAL = 100;
 const DEFAULT_POSITION = {x: Math.floor(FIELD_WIDTH / 2), y: -1};
 const FAST_SPEED = 3;
+
+const POINTS_PER_LINE = 50;
 
 const globalState = {
     _dx: 0,
@@ -103,7 +115,7 @@ function checkCollisionWithFigures(figure, field, speed = 1) {
 document.addEventListener("keydown", handleUserInput)
 
 function handleUserInput(event) {
-    // console.log(`Key ${event.code} has pressed`);
+    console.log(`Key ${event.code} has pressed`);
     switch (event.code) {
         case "ArrowDown" :
             globalState.shouldSpeedUp = true;
@@ -117,6 +129,15 @@ function handleUserInput(event) {
         case "ArrowUp" :
             globalState.shouldRotate = true;
             break;
+        case "Escape":
+            if (paused) {
+                intervalTickID = setInterval(tick, TICK_INTERVAL, field, figures);
+            }
+            else {
+                clearInterval(intervalTickID);
+            }
+            paused = !paused;
+            break
     }
 }
 
@@ -192,6 +213,12 @@ function compressField(field) {
     }
 }
 
+function addPointsToUser() {
+    currentUser.points += POINTS_PER_LINE;
+    setCookie(CURRENT_LOGGED_PLAYER, currentUser, {});
+    setCookie(currentUser.name, currentUser, {});
+}
+
 function checkField(field) {
     let rowFilled = true;
     for (let i = 0; i < FIELD_HEIGHT; i++) {
@@ -206,6 +233,9 @@ function checkField(field) {
             for (let j = 0; j < FIELD_WIDTH; j++) {
                 field[i][j].empty = true;
             }
+
+            addPointsToUser();
+
             compressField(field);
             checkField(field);
         }
@@ -255,9 +285,6 @@ function tick(field, figures) {
 }
 
 function game() {
-    const field = [];
-    const figures = [];
-
     generateNewFigure = cached(generateNewFigure);
 
     for (let i = 0; i < FIELD_HEIGHT; i++) {

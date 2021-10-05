@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script type="module" src="src/auth.js"></script>
 </head>
 <body>
 
@@ -16,80 +17,5 @@
     <input type="submit" value="input">
 </form>
 
-
-<script type="module">
-    const form = document.getElementById("form");
-    const name = document.getElementById("name");
-
-    const CURRENT_LOGGED_PLAYER = "currentLoggedPlayer";
-
-    window.onload = (evt) => {
-        let lastLogged = getCookie(CURRENT_LOGGED_PLAYER);
-        if (lastLogged) {
-            name.value = lastLogged;
-            return;
-        }
-        else if(getLastNameIndex()) {
-            name.value = getCookie(`player${getLastNameIndex()}`);
-        }
-    };
-
-    form.addEventListener("submit", appendCookies);
-
-    function appendCookies(evt) {
-        if (document.cookie === "") {
-            setCookie("player0", name.value, {});
-            setCookie(CURRENT_LOGGED_PLAYER, name.value, {});
-        }
-        else {
-            const cookies = document.cookie.split(";");
-            const names = cookies.map(c => c.split("=")[1]);
-            const index = names.findIndex(cname => cname === name.value)
-            if (index === -1) {
-                setCookie(`player${getLastNameIndex()}`, name.value, {});
-                setCookie(CURRENT_LOGGED_PLAYER, name.value, {});
-            } else {
-                setCookie(CURRENT_LOGGED_PLAYER, name.value, {});
-            }
-        }
-    }
-
-    export function getLastNameIndex() {
-        const cookies = document.cookie.split(";");
-        return cookies.length-1;
-    }
-
-
-    export function getCookie(name) {
-        let matches = document.cookie.match(new RegExp(
-            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-        ));
-        return matches ? decodeURIComponent(matches[1]) : undefined;
-    }
-
-    export function setCookie(name, value, options = {}) {
-
-        options = {
-            path: '/',
-            ...options
-        };
-
-        if (options.expires instanceof Date) {
-            options.expires = options.expires.toUTCString();
-        }
-
-        let updatedCookie = encodeURIComponent(name) + "=" + encodeURIComponent(value);
-
-        for (let optionKey in options) {
-            updatedCookie += "; " + optionKey;
-            let optionValue = options[optionKey];
-            if (optionValue !== true) {
-                updatedCookie += "=" + optionValue;
-            }
-        }
-
-        document.cookie = updatedCookie;
-    }
-</script>
 </body>
 </html>

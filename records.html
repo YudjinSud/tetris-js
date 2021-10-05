@@ -5,6 +5,36 @@
     <title>Title</title>
 </head>
 <body>
+<a href="authForm.html">Authorization form</a><br>
+
+<a href="index.html">Game</a>
+
+
+<script type="module">
+
+    window.onload = (evt) => {
+        const cookies = document.cookie.split(";");
+        const cookiesJSONs = cookies.map(c => c.split("=")[1]);
+
+        let jsons = cookiesJSONs.map(entry => JSON.parse(decodeURIComponent(entry)));
+
+        jsons = jsons.sort((a, b) => b.points - a.points);
+
+        let used = [];
+
+        const table = document.createElement("div");
+        for (const entry of jsons) {
+            if (!(used.includes(entry.name))) {
+                let p = document.createElement("p");
+                p.innerText = `${entry.name} : ${entry.points}`;
+                table.append(p);
+                used.push(entry.name);
+            }
+        }
+
+        document.body.append(table);
+    };
+</script>
 
 </body>
 </html>

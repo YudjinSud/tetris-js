@@ -24,6 +24,7 @@
             Right arrow - move figure into right </br>
             Up arrow - rotate figure </br>
             Bottom arrow - speed up figure </br>
+            Escape - pause the game </br>
         </p>
     </div>
     <div class="column">
@@ -31,38 +32,9 @@
     </div>
 </div>
 
-<script type="module" src="src/game.js"></script>
-
-<script>
-
-    const CURRENT_LOGGED_PLAYER = "currentLoggedPlayer";
-
-    window.onload = (evt) => {
-        const name = document.getElementById("name");
-
-        let lastLogged = getCookie(CURRENT_LOGGED_PLAYER);
-        if (lastLogged) {
-            name.innerText += lastLogged;
-            return;
-        }
-        else if(getLastNameIndex()) {
-            name.innerText += getCookie(`player${getLastNameIndex()}`);
-        }
-    };
-
-    function getLastNameIndex() {
-        const cookies = document.cookie.split(";");
-        return cookies.length-1;
-    }
-
-
-    function getCookie(name) {
-        let matches = document.cookie.match(new RegExp(
-            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-        ));
-        return matches ? decodeURIComponent(matches[1]) : undefined;
-    }
+<script type="module" src="src/game.js">
 </script>
+
 
 </body>
 </html>
